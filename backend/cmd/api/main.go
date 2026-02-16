@@ -15,6 +15,7 @@ import (
 
 	"job-dashboard-backend/internal/database"
 	"job-dashboard-backend/internal/handler"
+	"job-dashboard-backend/internal/middleware"
 	"job-dashboard-backend/internal/repository"
 	"job-dashboard-backend/internal/service"
 )
@@ -42,6 +43,9 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
+	token, _ := middleware.GenerateToken("my-user-id")
+	log.Println("Test Token:", token)
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("OK"))
@@ -49,7 +53,15 @@ func main() {
 		log.Println("Database connection status:", db.Ping(context.Background())) // Check DB connection
 	})
 
-	r.Get("/applications", appHandler.GetAll)
+	r.Route("/applications", func(r chi.Router) {
+		r.Use(middleware.JWTMiddleware)
+
+		r.Post("/", appHandler.Create)
+		r.Get("/", appHandler.GetAll)
+		r.Get("/{id}", appHandler.GetByID)
+		r.Put("/{id}", appHandler.Update)
+		r.Delete("/{id}", appHandler.Delete)
+	})
 
 	log.Println("Routes registered")
 
