@@ -38,13 +38,14 @@ func main() {
 	appService := service.NewApplicationService(appRepo)
 	appHandler := handler.NewApplicationHandler(appService)
 
+	userRepo := repository.NewUserRepository(db)
+	authService := service.NewAuthService(userRepo)
+	authHandler := handler.NewAuthHandler(authService)
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("OK"))
 	})
-
-	token, _ := middleware.GenerateToken("my-user-id")
-	log.Println("Test Token:", token)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
@@ -52,6 +53,9 @@ func main() {
 		log.Println("Health check endpoint hit")
 		log.Println("Database connection status:", db.Ping(context.Background())) // Check DB connection
 	})
+
+	r.Post("/auth/register", authHandler.Register)
+	r.Post("/auth/login", authHandler.Login)
 
 	r.Route("/applications", func(r chi.Router) {
 		r.Use(middleware.JWTMiddleware)
