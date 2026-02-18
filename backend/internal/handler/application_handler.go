@@ -2,93 +2,81 @@ package handler
 
 import (
 	"encoding/json"
+	"job-dashboard-backend/internal/models"
+	"job-dashboard-backend/internal/service"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-
-	"job-dashboard-backend/internal/models"
-	"job-dashboard-backend/internal/service"
+	"github.com/google/uuid"
 )
 
 type ApplicationHandler struct {
 	service *service.ApplicationService
 }
 
-func NewApplicationHandler(service *service.ApplicationService) *ApplicationHandler {
-	return &ApplicationHandler{service: service}
+func NewApplicationHandler(s *service.ApplicationService) *ApplicationHandler {
+	return &ApplicationHandler{service: s}
 }
 
 func (h *ApplicationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	apps, err := h.service.GetAll(r.Context())
-
+	userID := r.Context().Value("user_id").(string)
+	apps, err := h.service.GetAll(r.Context(), userID)
 	if err != nil {
-		http.Error(w, "Failed to retrieve applications", http.StatusInternalServerError)
+		http.Error(w, "server error", 500)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(apps)
 }
 
 func (h *ApplicationHandler) Create(w http.ResponseWriter, r *http.Request) {
-
+	userID := r.Context().Value("user_id").(string)
 	var app models.Application
-
-	err := json.NewDecoder(r.Body).Decode(&app)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
+	if err := json.NewDecoder(r.Body).Decode(&app); err != nil {
+		http.Error(w, "bad request", 400)
 		return
 	}
 
-	err = h.service.Create(r.Context(), app)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
+	app.ID = uuid.NewString() // Generate ID here
+	app.UserID = userID       // Link to User
+
+	if err := h.service.Create(r.Context(), app); err != nil {
+		http.Error(w, "server error", 500)
 		return
 	}
-
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(201)
 }
 
 func (h *ApplicationHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-
+	userID := r.Context().Value("user_id").(string)
 	id := chi.URLParam(r, "id")
-
-	app, err := h.service.GetByID(r.Context(), id)
+	app, err := h.service.GetByID(r.Context(), id, userID)
 	if err != nil {
 		http.Error(w, "not found", 404)
 		return
 	}
-
 	json.NewEncoder(w).Encode(app)
 }
 
 func (h *ApplicationHandler) Update(w http.ResponseWriter, r *http.Request) {
-
+	userID := r.Context().Value("user_id").(string)
 	id := chi.URLParam(r, "id")
-
 	var app models.Application
 	json.NewDecoder(r.Body).Decode(&app)
-
 	app.ID = id
 
-	err := h.service.Update(r.Context(), app)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
+	if err := h.service.Update(r.Context(), app, userID); err != nil {
+		http.Error(w, "server error", 500)
 		return
 	}
-
 	w.WriteHeader(204)
 }
 
 func (h *ApplicationHandler) Delete(w http.ResponseWriter, r *http.Request) {
-
+	userID := r.Context().Value("user_id").(string)
 	id := chi.URLParam(r, "id")
-
-	err := h.service.Delete(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
+	if err := h.service.Delete(r.Context(), id, userID); err != nil {
+		http.Error(w, "server error", 500)
 		return
 	}
-
 	w.WriteHeader(204)
 }
