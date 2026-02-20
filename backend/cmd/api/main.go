@@ -13,6 +13,8 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"job-dashboard-backend/internal/database"
 	"job-dashboard-backend/internal/handler"
 	"job-dashboard-backend/internal/middleware"
@@ -22,9 +24,7 @@ import (
 
 func main() {
 
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Println("Warning: No .env file found or unable to load it")
-	}
+	err := godotenv.Load()
 
 	r := chi.NewRouter()
 
@@ -53,6 +53,8 @@ func main() {
 		log.Println("Health check endpoint hit")
 		log.Println("Database connection status:", db.Ping(context.Background())) // Check DB connection
 	})
+
+	r.Handle("/metrics", promhttp.Handler())
 
 	r.Post("/auth/register", authHandler.Register)
 	r.Post("/auth/login", authHandler.Login)
