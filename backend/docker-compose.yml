@@ -16,8 +16,8 @@ services:
     env_file:
       - .env
     environment:
-      # Use 'db' as the hostname because Docker links them by service name
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/job_dashboard?sslmode=disable
+      # Changed '@db' to '@postgres' to match your service name above
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/job_dashboard?sslmode=disable
     deploy:
       replicas: 3
     depends_on:
@@ -43,8 +43,9 @@ services:
       - app
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.2.0
     container_name: grafana
+    platform: linux/amd64
     ports:
       - "3000:3000"
     depends_on:
