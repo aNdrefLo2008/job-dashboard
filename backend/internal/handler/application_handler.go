@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"job-dashboard-backend/internal/metrics"
 	"job-dashboard-backend/internal/models"
 	"job-dashboard-backend/internal/service"
 	"net/http"
@@ -43,6 +44,9 @@ func (h *ApplicationHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", 500)
 		return
 	}
+
+	metrics.ApplicationsCreatedTotal.Inc()
+
 	w.WriteHeader(201)
 }
 
