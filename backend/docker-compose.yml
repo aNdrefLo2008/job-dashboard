@@ -16,10 +16,9 @@ services:
     env_file:
       - .env
     environment:
-      # Changed '@db' to '@postgres' to match your service name above
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/job_dashboard?sslmode=disable
     deploy:
-      replicas: 3
+      replicas: 1
     depends_on:
       - postgres
 
@@ -48,8 +47,12 @@ services:
     platform: linux/amd64
     ports:
       - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
 
 volumes:
   postgres_data:
+  grafana_data:

@@ -12,7 +12,7 @@ var (
 			Name: "http_requests_total",
 			Help: "Total number of HTTP requests processed by the API",
 		},
-		[]string{"method", "path", "status"}, // These are the "labels" we can filter by in Grafana
+		[]string{"method", "path", "status"},
 	)
 
 	// 2. Track a core business metric: Jobs Created
@@ -21,5 +21,15 @@ var (
 			Name: "applications_created_total",
 			Help: "Total number of job applications created across all users",
 		},
+	)
+
+	// 3. Track how long each request takes
+	HttpRequestDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_duration_seconds",
+			Help:    "Duration of HTTP requests in seconds",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "path"},
 	)
 )
