@@ -10,6 +10,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type contextKey string
+
+const UserIDKey contextKey = "userID"
+
 func GenerateToken(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -45,7 +49,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 
 		// Inject user_id into context
 		userID := claims["user_id"].(string)
-		ctx := context.WithValue(r.Context(), "user_id", userID)
+		ctx := context.WithValue(r.Context(), UserIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

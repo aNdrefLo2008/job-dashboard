@@ -14,8 +14,8 @@ func NewApplicationService(repo *repository.ApplicationRepository) *ApplicationS
 	return &ApplicationService{repo: repo}
 }
 
-func (s *ApplicationService) GetAll(ctx context.Context, userID string) ([]models.Application, error) {
-	return s.repo.GetAll(ctx, userID)
+func (s *ApplicationService) GetAll(ctx context.Context, userID string, limit, offset int) ([]models.Application, error) {
+	return s.repo.GetAll(ctx, userID, limit, offset)
 }
 
 func (s *ApplicationService) Create(ctx context.Context, a models.Application) error {

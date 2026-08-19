@@ -15,9 +15,16 @@ func NewApplicationRepository(db *pgxpool.Pool) *ApplicationRepository {
 	return &ApplicationRepository{db: db}
 }
 
-func (r *ApplicationRepository) GetAll(ctx context.Context, userID string) ([]models.Application, error) {
-	rows, err := r.db.Query(ctx,
-		"SELECT id, company, platform, status, created_at FROM applications WHERE user_id = $1", userID)
+func (r *ApplicationRepository) GetAll(ctx context.Context, userID string, limit, offset int) ([]models.Application, error) {
+	query := `
+		SELECT id, company, platform, status, user_id, created_at
+		FROM applications
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := r.db.Query(ctx, query, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -25,12 +32,13 @@ func (r *ApplicationRepository) GetAll(ctx context.Context, userID string) ([]mo
 
 	var apps []models.Application
 	for rows.Next() {
-		var a models.Application
-		if err := rows.Scan(&a.ID, &a.Company, &a.Platform, &a.Status, &a.CreatedAt); err != nil {
+		var app models.Application
+		if err := rows.Scan(&app.ID, &app.Company, &app.Platform, &app.Status, &app.UserID, &app.CreatedAt); err != nil {
 			return nil, err
 		}
-		apps = append(apps, a)
+		apps = append(apps, app)
 	}
+
 	return apps, nil
 }
 

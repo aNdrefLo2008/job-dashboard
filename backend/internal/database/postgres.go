@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -19,5 +20,15 @@ func NewPostgres() (*pgxpool.Pool, error) {
 		os.Getenv("DB_NAME"),
 	)
 
-	return pgxpool.New(context.Background(), dsn)
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Füge diese Zeilen hinzu:
+	config.MaxConns = 50 // Erlaube bis zu 50 parallele Verbindungen für Load Tests
+	config.MinConns = 10 // Halte 10 Verbindungen immer warm
+	config.MaxConnIdleTime = 15 * time.Minute
+
+	return pgxpool.NewWithConfig(context.Background(), config)
 }
