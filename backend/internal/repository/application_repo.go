@@ -44,8 +44,8 @@ func (r *ApplicationRepository) GetAll(ctx context.Context, userID string, limit
 
 func (r *ApplicationRepository) Create(ctx context.Context, a models.Application) error {
 	_, err := r.db.Exec(ctx,
-		`INSERT INTO applications (id, company, platform, status, user_id) VALUES ($1,$2,$3,$4,$5)`,
-		a.ID, a.Company, a.Platform, a.Status, a.UserID)
+		`INSERT INTO applications (id, company, platform, status, user_id, created_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+		a.ID, a.Company, a.Platform, a.Status, a.UserID, a.CreatedAt)
 	return err
 }
 

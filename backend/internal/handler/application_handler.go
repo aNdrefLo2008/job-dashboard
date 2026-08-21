@@ -78,11 +78,13 @@ func (h *ApplicationHandler) Create(w http.ResponseWriter, r *http.Request) {
 	app.ID = uuid.NewString()
 	app.UserID = userID
 
-	// 2. 5-Sekunden Timeout für den DB-Schreibvorgang erstellen
+	if app.CreatedAt.IsZero() {
+		app.CreatedAt = time.Now()
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// 3. 'ctx' mit Timeout an die Datenbank weiterreichen
 	if err := h.service.Create(ctx, app); err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return

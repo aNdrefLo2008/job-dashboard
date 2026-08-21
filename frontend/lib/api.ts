@@ -35,7 +35,7 @@ export async function getApplications(page = 1, limit = 50): Promise<BackendAppl
   return res.json()
 }
 
-export async function createApplication(app: { company: string; platform: string; status: string }): Promise<void> {
+export async function createApplication(app: { company: string; platform: string; status: string; created_at?: string }): Promise<void> {
   const res = await fetch(`${API_URL}/applications/`, {
     method: "POST",
     headers: {
