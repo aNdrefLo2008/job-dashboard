@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS users (
+    id VARCHAR(36) PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    provider VARCHAR(50) DEFAULT 'local',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS applications (
+    id VARCHAR(36) PRIMARY KEY,
+    company VARCHAR(255) NOT NULL,
+    platform VARCHAR(255),
+    status VARCHAR(50) NOT NULL,
+    user_id VARCHAR(36) REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

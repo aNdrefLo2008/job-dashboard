@@ -28,6 +28,8 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.CORS)
+
 	db, err := database.NewPostgres()
 
 	if err != nil {
