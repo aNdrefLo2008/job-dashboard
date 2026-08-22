@@ -47,3 +47,25 @@ export async function createApplication(app: { company: string; platform: string
 
   if (!res.ok) throw new Error("Fehler beim Erstellen der Bewerbung")
 }
+
+export const deleteApplication = async (id: string) => {
+  const token = localStorage.getItem("token")
+  const res = await fetch(`${API_URL}/applications/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error("Fehler beim Löschen")
+}
+
+export const updateApplication = async (id: string, data: any) => {
+  const token = localStorage.getItem("token")
+  const res = await fetch(`${API_URL}/applications/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error("Fehler beim Update")
+}

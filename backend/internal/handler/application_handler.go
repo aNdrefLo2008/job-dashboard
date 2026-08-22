@@ -130,11 +130,17 @@ func (h *ApplicationHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ApplicationHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
-	id := chi.URLParam(r, "id")
-	if err := h.service.Delete(r.Context(), id, userID); err != nil {
-		http.Error(w, "server error", 500)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	w.WriteHeader(204)
+
+	id := chi.URLParam(r, "id")
+	if err := h.service.Delete(r.Context(), id, userID); err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent) // 204
 }

@@ -9,4 +9,6 @@ type Application struct {
 	Status    string    `json:"status"`
 	UserID    string    `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
+	Notes     string    `json:"notes"`
+	JobURL    string    `json:"job_url"`
 }

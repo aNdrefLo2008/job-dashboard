@@ -11,5 +11,7 @@ CREATE TABLE IF NOT EXISTS applications (
     platform VARCHAR(255),
     status VARCHAR(50) NOT NULL,
     user_id VARCHAR(36) REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT DEFAULT '',
+    job_url TEXT DEFAULT ''
 );

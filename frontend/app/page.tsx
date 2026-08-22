@@ -5,7 +5,12 @@
 import {useEffect, useState} from "react"
 import {useRouter} from "next/navigation"
 import {motion} from "framer-motion"
-import {getApplications, createApplication} from "@/lib/api"
+import {
+  getApplications,
+  createApplication,
+  updateApplication,
+  deleteApplication
+} from "@/lib/api"
 import {useAuth} from "@/lib/auth-context"
 
 type Status = "beworben" | "interview" | "angebot"
@@ -17,6 +22,8 @@ interface Application {
   status: Status
   daysInStatus: number
   createdAt: string
+  notes?: string
+  jobUrl?: string
 }
 
 const zoneStart: Record<Status, number> = {
@@ -157,6 +164,67 @@ export default function Home() {
     new Date().toISOString().split("T")[0]
   )
 
+  const [tempNotes, setTempNotes] = useState("")
+
+  const [tempUrl, setTempUrl] = useState("")
+
+  useEffect(() => {
+    if (selectedApp) {
+      setTempNotes(selectedApp.notes || "")
+      setTempUrl(selectedApp.jobUrl || "")
+    }
+  }, [selectedApp])
+
+  const handleSaveDetails = async () => {
+    if (!selectedApp) return
+
+    const apiPayload = {
+      id: selectedApp.id,
+      company: selectedApp.company,
+      platform: selectedApp.position,
+      status: selectedApp.status,
+      notes: tempNotes,
+      job_url: tempUrl
+    }
+
+    await updateApplication(selectedApp.id, apiPayload)
+
+    const updatedData = {
+      ...selectedApp,
+      notes: tempNotes,
+      jobUrl: tempUrl
+    }
+
+    setSelectedApp(updatedData)
+    loadData()
+  }
+  const handleDelete = async () => {
+    if (!selectedApp) return
+    if (!confirm("Bewerbung wirklich löschen?")) return
+
+    await deleteApplication(selectedApp.id)
+    setSelectedApp(null)
+    loadData()
+  }
+
+  const handleStatusChange = async (newStatus: Status) => {
+    if (!selectedApp || selectedApp.status === newStatus) return
+
+    const apiPayload = {
+      id: selectedApp.id,
+      company: selectedApp.company,
+      platform: selectedApp.position,
+      status: newStatus,
+      notes: selectedApp.notes || "",
+      job_url: selectedApp.jobUrl || ""
+    }
+
+    await updateApplication(selectedApp.id, apiPayload)
+
+    setSelectedApp({...selectedApp, status: newStatus})
+    loadData()
+  }
+
   const loadData = async () => {
     try {
       const data = await getApplications()
@@ -176,11 +244,12 @@ export default function Home() {
           position: item.platform || item.position || "N/A",
           status: validStatus,
           createdAt: item.created_at || item.createdAt,
-          daysInStatus: calculateDays(item.created_at || item.createdAt)
+          daysInStatus: calculateDays(item.created_at || item.createdAt),
+          notes: item.notes || "",
+          jobUrl: item.job_url || ""
         }
       })
 
-      // Optional: Für Mobile wollen wir sie vielleicht nach Datum sortieren (neueste oben)
       mapped.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -205,7 +274,6 @@ export default function Home() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Prüfen ob Datum in der Zukunft liegt (optional)
     const selectedDate = new Date(appliedDate)
     if (selectedDate > new Date()) {
       alert("Das Datum kann nicht in der Zukunft liegen.")
@@ -432,13 +500,19 @@ export default function Home() {
       )}
       {/* Detail Slide-Over */}
       {selectedApp && (
-        <div className='fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm'>
+        /* 1. DAS BACKDROP: Füllt den ganzen Bildschirm und schließt bei Klick */
+        <div
+          onClick={() => setSelectedApp(null)}
+          className='fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end'>
+          {/* 2. DAS EIGENTLICHE SLIDE-OVER PANEL */}
+          {/* WICHTIG: stopPropagation() verhindert, dass ein Klick INTIM DES PANELS das Fenster schließt! */}
           <motion.div
+            onClick={(e) => e.stopPropagation()}
             initial={{x: "100%"}}
             animate={{x: 0}}
             exit={{x: "100%"}}
-            transition={{type: "spring", damping: 25, stiffness: 200}}
-            className='w-full max-w-md h-full bg-surface border-l border-white/10 shadow-2xl p-6 overflow-y-auto flex flex-col'>
+            transition={{type: "spring", stiffness: 300, damping: 30}}
+            className='w-full max-w-md h-full bg-surface border-l border-white/10 p-6 overflow-y-auto flex flex-col shadow-2xl'>
             <div className='flex justify-between items-start mb-8'>
               <div>
                 <h2 className='text-2xl font-display text-foreground'>
@@ -455,32 +529,62 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Status Badge */}
-            <div className='mb-8 p-4 rounded-lg bg-background/50 border border-white/5 flex items-center justify-between'>
-              <span className='font-mono text-xs text-muted uppercase'>
-                Aktueller Status
+            {/* Interaktive Status-Buttons */}
+            <div className='mb-8 p-4 rounded-lg bg-background/50 border border-white/5'>
+              <span className='font-mono text-xs text-muted uppercase block mb-3'>
+                Status ändern
               </span>
-              <span className='font-mono text-xs text-accent bg-accent/10 px-3 py-1 rounded-full'>
-                {statusLabel(selectedApp.status)}
-              </span>
+              <div className='flex gap-2'>
+                {(["beworben", "interview", "angebot"] as Status[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => handleStatusChange(s)}
+                    className={`flex-1 py-1.5 rounded-full font-mono text-xs transition-colors ${
+                      selectedApp.status === s
+                        ? "bg-accent text-background font-semibold shadow-[0_0_10px_rgba(79,157,222,0.4)]"
+                        : "bg-white/5 text-muted hover:bg-white/10"
+                    }`}>
+                    {statusLabel(s)}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Platzhalter für Notizen (kommt als nächstes Feature!) */}
+            {/* URL-Feld */}
+            <div className='mb-4'>
+              <h4 className='font-mono text-xs text-muted mb-2 uppercase tracking-wider'>
+                Stellenanzeige (URL)
+              </h4>
+              <input
+                type='url'
+                value={tempUrl}
+                onChange={(e) => setTempUrl(e.target.value)}
+                placeholder='https://linkedin.com/jobs/...'
+                className='w-full bg-background/50 border border-white/10 rounded-lg p-3 text-sm text-foreground focus:border-accent focus:outline-none transition-colors'
+              />
+            </div>
+
+            {/* Notizen-Feld */}
             <div className='flex-1'>
               <h4 className='font-mono text-xs text-muted mb-2 uppercase tracking-wider'>
                 Notizen
               </h4>
               <textarea
+                value={tempNotes}
+                onChange={(e) => setTempNotes(e.target.value)}
                 placeholder='Gesprächsnotizen, Gehalt, Ansprechpartner...'
                 className='w-full h-32 bg-background/50 border border-white/10 rounded-lg p-3 text-sm text-foreground focus:border-accent focus:outline-none resize-none transition-colors'
               />
-              <button className='mt-3 w-full py-2 bg-white/5 hover:bg-white/10 rounded border border-white/10 font-mono text-xs text-muted transition-colors'>
-                Notiz speichern
+              <button
+                onClick={handleSaveDetails}
+                className='mt-3 w-full py-2.5 bg-accent/20 hover:bg-accent/30 text-accent border border-accent/40 rounded-lg font-mono text-xs font-semibold transition-all shadow-[0_0_10px_rgba(79,157,222,0.1)]'>
+                Änderungen speichern
               </button>
             </div>
 
-            {/* Löschen Button (optional, aber cool zu haben) */}
-            <button className='mt-8 py-3 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg font-mono text-xs transition-colors border border-transparent hover:border-red-400/20'>
+            <button
+              onClick={handleDelete}
+              className='mt-8 py-3 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg font-mono text-xs transition-colors border border-transparent hover:border-red-400/20'>
               Bewerbung löschen
             </button>
           </motion.div>
