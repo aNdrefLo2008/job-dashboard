@@ -13,6 +13,13 @@ export async function login(email: string, password: string): Promise<string> {
   })
 
   if (!res.ok) throw new Error("Login fehlgeschlagen")
+
+  if (res.status === 401) {
+    localStorage.removeItem("token")
+    window.location.href = "/login"
+    throw new Error("Session abgelaufen. Bitte neu einloggen.")
+  }
+
   const data = await res.json()
   return data.token
 }
@@ -35,7 +42,8 @@ export async function getApplications(page = 1, limit = 50): Promise<BackendAppl
   return res.json()
 }
 
-export async function createApplication(app: { company: string; platform: string; status: string; created_at?: string }): Promise<void> {
+export async function createApplication(app: { company: string; platform: string; status: string; created_at?: string; notes?: string;
+  job_url?: string; }): Promise<void> {
   const res = await fetch(`${API_URL}/applications/`, {
     method: "POST",
     headers: {

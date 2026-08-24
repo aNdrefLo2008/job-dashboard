@@ -59,6 +59,13 @@ export default function LoginPage() {
           className='w-full rounded bg-accent py-2 font-mono text-sm text-background font-semibold hover:opacity-90'>
           Login
         </button>
+
+        <p className='mt-4 text-center font-mono text-xs text-muted'>
+          Noch keinen Account?{" "}
+          <a href='/register' className='text-accent hover:underline'>
+            Hier registrieren
+          </a>
+        </p>
       </form>
     </div>
   )

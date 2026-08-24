@@ -164,6 +164,9 @@ export default function Home() {
     new Date().toISOString().split("T")[0]
   )
 
+  const [notes, setNotes] = useState("")
+  const [jobUrl, setJobUrl] = useState("")
+
   const [tempNotes, setTempNotes] = useState("")
 
   const [tempUrl, setTempUrl] = useState("")
@@ -284,12 +287,16 @@ export default function Home() {
       company,
       platform: position,
       status,
+      notes,
+      job_url: jobUrl,
       created_at: new Date(appliedDate).toISOString()
     })
 
     setCompany("")
     setPosition("")
     setStatus("beworben")
+    setNotes("")
+    setJobUrl("")
     setAppliedDate(new Date().toISOString().split("T")[0])
     setIsModalOpen(false)
     loadData()
@@ -340,6 +347,34 @@ export default function Home() {
             className='rounded border border-white/10 px-4 py-2.5 font-mono text-xs text-muted hover:text-foreground transition-colors'>
             Logout
           </button>
+        </div>
+      </div>
+
+      {/* Quick Metrics / Statistiken */}
+      <div className='grid grid-cols-3 gap-4 mb-12'>
+        <div className='rounded-xl border border-white/10 bg-surface p-4'>
+          <div className='font-mono text-xs text-muted uppercase tracking-wider'>
+            Gesamt
+          </div>
+          <div className='mt-2 font-display text-2xl text-foreground'>
+            {applications.length}
+          </div>
+        </div>
+        <div className='rounded-xl border border-white/10 bg-surface p-4'>
+          <div className='font-mono text-xs text-muted uppercase tracking-wider'>
+            Interviews
+          </div>
+          <div className='mt-2 font-display text-2xl text-accent'>
+            {applications.filter((a) => a.status === "interview").length}
+          </div>
+        </div>
+        <div className='rounded-xl border border-white/10 bg-surface p-4'>
+          <div className='font-mono text-xs text-muted uppercase tracking-wider'>
+            Angebote
+          </div>
+          <div className='mt-2 font-display text-2xl text-emerald-400'>
+            {applications.filter((a) => a.status === "angebot").length}
+          </div>
         </div>
       </div>
 
@@ -480,6 +515,31 @@ export default function Home() {
                   <option value='angebot'>Angebot</option>
                 </select>
               </div>
+
+              <div>
+                <label className='mb-1.5 block font-mono text-xs text-muted'>
+                  Stellenanzeige (URL)
+                </label>
+                <input
+                  type='url'
+                  value={jobUrl}
+                  onChange={(e) => setJobUrl(e.target.value)}
+                  placeholder='https://...'
+                  className='w-full rounded-lg border border-white/10 bg-background/50 p-2.5 text-sm text-foreground focus:outline-none focus:border-accent transition-colors'
+                />
+              </div>
+
+              <div>
+                <label className='mb-1.5 block font-mono text-xs text-muted'>
+                  Notizen
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder='Erste Notizen...'
+                  className='w-full rounded-lg border border-white/10 bg-background/50 p-2.5 text-sm text-foreground focus:outline-none focus:border-accent transition-colors resize-none h-20'
+                />
+              </div>
             </div>
 
             <div className='flex justify-end gap-3 mt-8'>
@@ -552,9 +612,20 @@ export default function Home() {
 
             {/* URL-Feld */}
             <div className='mb-4'>
-              <h4 className='font-mono text-xs text-muted mb-2 uppercase tracking-wider'>
-                Stellenanzeige (URL)
-              </h4>
+              <div className='flex justify-between items-center mb-2'>
+                <h4 className='font-mono text-xs text-muted uppercase tracking-wider'>
+                  Stellenanzeige (URL)
+                </h4>
+                {tempUrl && (
+                  <a
+                    href={tempUrl}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='font-mono text-[11px] text-accent hover:underline flex items-center gap-1'>
+                    Öffnen ↗
+                  </a>
+                )}
+              </div>
               <input
                 type='url'
                 value={tempUrl}
