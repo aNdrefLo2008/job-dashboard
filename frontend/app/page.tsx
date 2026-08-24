@@ -171,6 +171,9 @@ export default function Home() {
 
   const [tempUrl, setTempUrl] = useState("")
 
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+
   useEffect(() => {
     if (selectedApp) {
       setTempNotes(selectedApp.notes || "")
@@ -302,8 +305,19 @@ export default function Home() {
     loadData()
   }
 
-  // Stacking Logik für Desktop
-  const positioned = applications
+  // NEU: Filtern nach Suchbegriff (Firma/Rolle) und Status
+  const filteredApplications = applications.filter((app) => {
+    const matchesSearch =
+      app.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.position.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesStatus = statusFilter === "all" || app.status === statusFilter
+
+    return matchesSearch && matchesStatus
+  })
+
+  // Stacking Logik basierend auf den gefilterten Apps
+  const positioned = filteredApplications
     .map((app) => ({app, left: computePosition(app)}))
     .sort((a, b) => a.left - b.left)
 
@@ -347,6 +361,41 @@ export default function Home() {
             className='rounded border border-white/10 px-4 py-2.5 font-mono text-xs text-muted hover:text-foreground transition-colors'>
             Logout
           </button>
+        </div>
+      </div>
+
+      {/* Such- und Filterleiste */}
+      <div className='mb-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4'>
+        {/* Suchfeld */}
+        <div className='relative flex-1 max-w-md'>
+          <input
+            type='text'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder='Suche nach Firma oder Rolle...'
+            className='w-full rounded-xl border border-white/10 bg-surface px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent transition-colors'
+          />
+        </div>
+
+        {/* Status-Filter-Buttons */}
+        <div className='flex gap-1.5 overflow-x-auto pb-1 sm:pb-0'>
+          {[
+            {id: "all", label: "Alle"},
+            {id: "beworben", label: "Beworben"},
+            {id: "interview", label: "Interviews"},
+            {id: "angebot", label: "Angebote"}
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setStatusFilter(tab.id)}
+              className={`px-3 py-2 rounded-lg font-mono text-xs transition-colors whitespace-nowrap ${
+                statusFilter === tab.id
+                  ? "bg-accent text-background font-semibold"
+                  : "bg-surface border border-white/10 text-muted hover:text-foreground"
+              }`}>
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
