@@ -31,6 +31,10 @@ export interface BackendApplication {
   status: string
   user_id: string
   created_at: string
+  notes?: string
+  job_url?: string
+  salary?: string
+  cv_version?: string
 }
 
 export async function getApplications(page = 1, limit = 50): Promise<BackendApplication[]> {
@@ -38,12 +42,28 @@ export async function getApplications(page = 1, limit = 50): Promise<BackendAppl
     headers: { ...getAuthHeader() },
   })
 
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token") // Ungültigen Token löschen
+      window.location.href = "/login"  // Automatisch zum Login schicken
+    }
+    throw new Error("Sitzung abgelaufen. Bitte neu einloggen.")
+  }
+
   if (!res.ok) throw new Error("Fehler beim Laden der Bewerbungen")
   return res.json()
 }
 
-export async function createApplication(app: { company: string; platform: string; status: string; created_at?: string; notes?: string;
-  job_url?: string; }): Promise<void> {
+export async function createApplication(app: { 
+  company: string; 
+  platform: string; 
+  status: string; 
+  created_at?: string; 
+  notes?: string;
+  job_url?: string;
+  salary?: string;
+  cv_version?: string;
+}): Promise<void> {
   const res = await fetch(`${API_URL}/applications/`, {
     method: "POST",
     headers: {

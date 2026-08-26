@@ -11,4 +11,6 @@ type Application struct {
 	CreatedAt time.Time `json:"created_at"`
 	Notes     string    `json:"notes"`
 	JobURL    string    `json:"job_url"`
+	Salary    string    `json:"salary,omitempty" db:"salary"`
+	CvVersion string    `json:"cv_version,omitempty" db:"cv_version"`
 }
