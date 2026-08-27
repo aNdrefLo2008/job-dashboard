@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 300px; font-family: sans-serif; padding: 12px; margin: 0; background: #0f172a; color: white; }
+    h3 { margin-top: 0; font-size: 16px; color: #38bdf8; }
+    label { font-size: 11px; display: block; margin-top: 8px; color: #94a3b8; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 2px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; }
+    button { width: 100%; margin-top: 12px; padding: 8px; background: #0284c7; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    button:hover { background: #0369a1; }
+    .status { font-size: 11px; margin-top: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h3>🚀 Job Speichern</h3>
+  
+  <label>JWT Token (einmalig einfügen):</label>
+  <input type="password" id="token" placeholder="Bearer Token..." />
+
+  <label>Firma:</label>
+  <input type="text" id="company" placeholder="z.B. Google" />
+
+  <label>Plattform / Rolle:</label>
+  <input type="text" id="platform" placeholder="z.B. LinkedIn / Senior Dev" />
+
+  <label>Status:</label>
+  <select id="status">
+    <option value="beworben">Beworben</option>
+    <option value="offen">Interessant</option>
+  </select>
+
+  <label>Job URL:</label>
+  <input type="text" id="job_url" />
+
+  <label>Gehalt (Optional):</label>
+  <input type="text" id="salary" placeholder="z.B. 80.000 €" />
+
+  <button id="saveBtn">Speichern</button>
+  <div id="statusMsg" class="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

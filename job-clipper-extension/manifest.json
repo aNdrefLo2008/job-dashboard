@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Job Dashboard Clipper",
+  "version": "1.0",
+  "description": "Speichere Jobs direkt mit einem Klick im Dashboard",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://localhost:8080/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
