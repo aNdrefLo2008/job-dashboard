@@ -12,6 +12,7 @@ import {
   deleteApplication
 } from "@/lib/api"
 import {useAuth} from "@/lib/auth-context"
+import Link from "next/dist/client/link"
 
 type Status = "beworben" | "interview" | "angebot" | "absage"
 type ViewMode = "timeline" | "kanban"
@@ -399,6 +400,11 @@ export default function Home() {
           Job Dashboard
         </motion.h1>
         <div className='flex w-full sm:w-auto gap-4'>
+          <Link
+            href='/analytics'
+            className='flex-1 sm:flex-none rounded bg-gray-300 px-4 py-2.5 font-mono text-xs font-semibold text-background hover:opacity-90 transition-opacity'>
+            Analytics
+          </Link>
           <button
             onClick={() => setIsModalOpen(true)}
             className='flex-1 sm:flex-none rounded bg-accent px-4 py-2.5 font-mono text-xs font-semibold text-background hover:opacity-90 transition-opacity'>

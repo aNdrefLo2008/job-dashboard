@@ -3,40 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { width: 300px; font-family: sans-serif; padding: 12px; margin: 0; background: #0f172a; color: white; }
-    h3 { margin-top: 0; font-size: 16px; color: #38bdf8; }
+    body { width: 320px; font-family: system-ui, sans-serif; padding: 14px; margin: 0; background: #0f172a; color: white; }
+    h3 { margin-top: 0; font-size: 16px; color: #38bdf8; display: flex; justify-content: space-between; align-items: center; }
     label { font-size: 11px; display: block; margin-top: 8px; color: #94a3b8; }
-    input, select, textarea { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 2px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; }
-    button { width: 100%; margin-top: 12px; padding: 8px; background: #0284c7; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    input, select { width: 100%; box-sizing: border-box; padding: 7px; margin-top: 3px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; }
+    button { width: 100%; margin-top: 12px; padding: 9px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
     button:hover { background: #0369a1; }
-    .status { font-size: 11px; margin-top: 8px; text-align: center; }
+    .btn-secondary { background: #334155; font-size: 11px; padding: 4px 8px; width: auto; margin: 0; }
+    .btn-secondary:hover { background: #475569; }
+    .status { font-size: 11px; margin-top: 8px; text-align: center; font-weight: bold; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h3>🚀 Job Speichern</h3>
-  
-  <label>JWT Token (einmalig einfügen):</label>
-  <input type="password" id="token" placeholder="Bearer Token..." />
 
-  <label>Firma:</label>
-  <input type="text" id="company" placeholder="z.B. Google" />
+  <!-- LOGIN ANSICHT -->
+  <div id="loginView">
+    <h3>🔐 Login</h3>
+    <label>E-Mail:</label>
+    <input type="email" id="loginEmail" placeholder="deine@email.de" />
+    <label>Passwort:</label>
+    <input type="password" id="loginPassword" placeholder="••••••••" />
+    <button id="loginBtn">Einloggen</button>
+  </div>
 
-  <label>Plattform / Rolle:</label>
-  <input type="text" id="platform" placeholder="z.B. LinkedIn / Senior Dev" />
+  <!-- CLIPPER ANSICHT -->
+  <div id="clipperView" class="hidden">
+    <h3>
+      🚀 Job Speichern
+      <button id="logoutBtn" class="btn-secondary">Logout</button>
+    </h3>
 
-  <label>Status:</label>
-  <select id="status">
-    <option value="beworben">Beworben</option>
-    <option value="offen">Interessant</option>
-  </select>
+    <label>Firma:</label>
+    <input type="text" id="company" placeholder="Lade..." />
 
-  <label>Job URL:</label>
-  <input type="text" id="job_url" />
+    <label>Plattform / Rolle:</label>
+    <input type="text" id="platform" placeholder="Lade..." />
 
-  <label>Gehalt (Optional):</label>
-  <input type="text" id="salary" placeholder="z.B. 80.000 €" />
+    <label>Status:</label>
+    <select id="status">
+      <option value="beworben">Beworben</option>
+      <option value="offen">Interessant</option>
+    </select>
 
-  <button id="saveBtn">Speichern</button>
+    <label>Job URL:</label>
+    <input type="text" id="job_url" />
+
+    <label>Gehalt (Optional):</label>
+    <input type="text" id="salary" placeholder="z.B. 60.000 €" />
+
+    <button id="saveBtn">In Dashboard Speichern</button>
+  </div>
+
   <div id="statusMsg" class="status"></div>
 
   <script src="popup.js"></script>
