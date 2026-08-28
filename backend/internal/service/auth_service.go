@@ -2,15 +2,17 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 
 	"job-dashboard-backend/internal/middleware"
 	"job-dashboard-backend/internal/models"
 	"job-dashboard-backend/internal/repository"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
@@ -43,4 +45,29 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 
 	token, err := middleware.GenerateToken(user.ID)
 	return token, err
+}
+
+type GoogleTokenInfo struct {
+	Email string `json:"email"`
+}
+
+func (s *AuthService) GoogleLogin(ctx context.Context, idToken string) (string, error) {
+	resp, err := http.Get(fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", idToken))
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return "", errors.New("ungültiger Google Token")
+	}
+	defer resp.Body.Close()
+
+	var gInfo GoogleTokenInfo
+	if err := json.NewDecoder(resp.Body).Decode(&gInfo); err != nil {
+		return "", err
+	}
+
+	// s.repo statt s.userRepo nutzen:
+	user, err := s.repo.GetOrCreateGoogleUser(ctx, gInfo.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return middleware.GenerateToken(user.ID)
 }

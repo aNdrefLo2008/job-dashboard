@@ -10,9 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-
 	"github.com/joho/godotenv"
-
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"job-dashboard-backend/internal/database"
@@ -23,19 +21,15 @@ import (
 )
 
 func main() {
+	_ = godotenv.Load()
 
-	err := godotenv.Load()
-
-	r := chi.NewRouter()
-
-	r.Use(middleware.CORS)
-
+	// 1. Datenbank-Verbindung aufbauen
 	db, err := database.NewPostgres()
-
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// 2. Repositories, Services & Handler ERST initialisieren
 	appRepo := repository.NewApplicationRepository(db)
 	appService := service.NewApplicationService(appRepo)
 	appHandler := handler.NewApplicationHandler(appService)
@@ -44,8 +38,13 @@ func main() {
 	authService := service.NewAuthService(userRepo)
 	authHandler := handler.NewAuthHandler(authService)
 
+	// 3. Chi Router initialisieren
+	r := chi.NewRouter()
+
+	r.Use(middleware.CORS)
 	r.Use(middleware.MetricsMiddleware)
 
+	// 4. Routen registrieren
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("OK"))
@@ -55,14 +54,17 @@ func main() {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("OK"))
 		log.Println("Health check endpoint hit")
-		log.Println("Database connection status:", db.Ping(context.Background())) // Check DB connection
+		log.Println("Database connection status:", db.Ping(context.Background()))
 	})
 
 	r.Handle("/metrics", promhttp.Handler())
 
+	// Auth-Routen
 	r.Post("/auth/register", authHandler.Register)
 	r.Post("/auth/login", authHandler.Login)
+	r.Post("/auth/google", authHandler.GoogleLogin) // <-- Saubere Chi-Route
 
+	// Geschützte Application-Routen
 	r.Route("/applications", func(r chi.Router) {
 		r.Use(middleware.JWTMiddleware)
 
@@ -73,7 +75,7 @@ func main() {
 		r.Delete("/{id}", appHandler.Delete)
 	})
 
-	log.Println("Routes registered")
+	log.Println("Routes registered successfully")
 
 	server := &http.Server{
 		Addr:    ":8080",
