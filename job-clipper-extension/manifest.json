@@ -3,7 +3,7 @@
   "name": "Job Dashboard Clipper",
   "version": "2.0",
   "description": "Speichere Jobs direkt mit einem Klick im Dashboard",
-  "permissions": ["activeTab", "storage", "scripting"],
+  "permissions": ["activeTab", "storage", "scripting", "identity"],
   "host_permissions": [
     "http://localhost/*",
     "http://localhost:8080/*"

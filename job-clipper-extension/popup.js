@@ -1,10 +1,15 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  // ⚙️ KONFIGURATION
+  const GOOGLE_CLIENT_ID = "140044066141-o2i676ttmv05k425kc5uoanh6fjphigt.apps.googleusercontent.com";
+  const BACKEND_URL = "http://localhost"; // Passe die URL an dein Backend an (z. B. http://localhost/auth/login oder http://localhost:8080)
+
   const loginView = document.getElementById("loginView");
   const clipperView = document.getElementById("clipperView");
   
   const loginEmail = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
   const loginBtn = document.getElementById("loginBtn");
+  const googleLoginBtn = document.getElementById("googleLoginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
   
   const companyInput = document.getElementById("company");
@@ -16,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let jwtToken = null;
 
-  // 1. Prüfen, ob bereits eingeloggt
+  // 1. Prüfen, ob bereits eingeloggt (egal ob über Google oder E-Mail/Passwort)
   chrome.storage.local.get(["jwtToken"], async (result) => {
     if (result.jwtToken) {
       jwtToken = result.jwtToken;
@@ -39,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     initScraper();
   }
 
-  // 2. Login Event
+  // 2a. Normaler Login Event (E-Mail & Passwort)
   loginBtn.addEventListener("click", async () => {
     const email = loginEmail.value.trim();
     const password = loginPassword.value.trim();
@@ -52,7 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     loginBtn.innerText = "Lade...";
 
     try {
-      const res = await fetch("http://localhost/auth/login", {
+      const res = await fetch(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -61,17 +66,71 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!res.ok) throw new Error("Login fehlgeschlagen");
 
       const data = await res.json();
-      jwtToken = data.token;
-
-      // Token sicher im Browser speichern
-      chrome.storage.local.set({ jwtToken: data.token }, () => {
-        showClipperView();
-      });
+      saveTokenAndLogin(data.token);
     } catch (err) {
       showError("Falsche Login-Daten!");
       loginBtn.innerText = "Einloggen";
     }
   });
+
+  // 2b. Google Login Event
+  if (googleLoginBtn) {
+    googleLoginBtn.addEventListener("click", async () => {
+      const redirectUrl = chrome.identity.getRedirectURL();
+
+      const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+      authUrl.searchParams.set("client_id", GOOGLE_CLIENT_ID);
+      authUrl.searchParams.set("response_type", "id_token");
+      authUrl.searchParams.set("redirect_uri", redirectUrl);
+      authUrl.searchParams.set("scope", "openid email profile");
+      authUrl.searchParams.set("nonce", Math.random().toString(36).substring(2));
+
+      chrome.identity.launchWebAuthFlow(
+        {
+          url: authUrl.toString(),
+          interactive: true,
+        },
+        async (responseUrl) => {
+          if (chrome.runtime.lastError || !responseUrl) {
+            showError("Google Login abgebrochen!");
+            return;
+          }
+
+          const urlHash = new URL(responseUrl).hash.substring(1);
+          const params = new URLSearchParams(urlHash);
+          const idToken = params.get("id_token");
+
+          if (!idToken) {
+            showError("Kein Token empfangen");
+            return;
+          }
+
+          try {
+            const res = await fetch(`${BACKEND_URL}/auth/google`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id_token: idToken }),
+            });
+
+            if (!res.ok) throw new Error("Google Backend Login fehlgeschlagen");
+
+            const data = await res.json();
+            saveTokenAndLogin(data.token);
+          } catch (err) {
+            showError("Google Login fehlgeschlagen!");
+          }
+        }
+      );
+    });
+  }
+
+  // Token im Browser-Storage speichern und View umschalten
+  function saveTokenAndLogin(token) {
+    jwtToken = token;
+    chrome.storage.local.set({ jwtToken: token }, () => {
+      showClipperView();
+    });
+  }
 
   // Logout Event
   logoutBtn.addEventListener("click", () => {
@@ -88,32 +147,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     jobUrlInput.value = tab.url || "";
 
-    // Skript in der aktuellen Website ausführen, um Daten abzugreifen
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: scrapeJobDetails
     }, (results) => {
-      // Platzhalter wieder normalisieren, falls nichts gefunden wird
       companyInput.placeholder = "z.B. Google";
       platformInput.placeholder = "z.B. LinkedIn / Senior Dev";
 
       if (results && results[0] && results[0].result) {
         const data = results[0].result;
-        
-        // Wenn Daten gefunden wurden, eintragen
         companyInput.value = data.company || "";
         salaryInput.value = data.salary || "";
-        
-        // Wenn kein Titel gefunden wurde, nimm den Browser-Tab-Titel als Fallback
         platformInput.value = data.title || (tab.title ? tab.title.substring(0, 50) : "");
       } else {
-        // Kompletter Fallback, falls das Skript fehlschlägt
         platformInput.value = tab.title ? tab.title.substring(0, 50) : "";
       }
     });
   }
 
-  // Diese Funktion läuft DIREKT im HTML der Jobseite!
   function scrapeJobDetails() {
     let company = "";
     let title = "";
@@ -121,7 +172,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const host = window.location.hostname;
 
-    // INDEED SCRAPER
     if (host.includes("indeed.")) {
       company = document.querySelector('[data-testid="inlineHeader-companyName"]')?.innerText ||
                 document.querySelector('.jobsearch-CompanyReview--heading')?.innerText || "";
@@ -129,7 +179,6 @@ document.addEventListener("DOMContentLoaded", async () => {
               document.querySelector('h1.jobsearch-JobInfoHeader-title')?.innerText || "";
       salary = document.querySelector('#salaryInfoAndJobType')?.innerText || "";
     } 
-    // LINKEDIN SCRAPER
     else if (host.includes("linkedin.")) {
       company = document.querySelector('.job-details-jobs-unified-top-card__company-name')?.innerText ||
                 document.querySelector('.jobs-unified-top-card__company-name')?.innerText || "";
@@ -159,7 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-      const res = await fetch("http://localhost/applications/", {
+      const res = await fetch(`${BACKEND_URL}/applications/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

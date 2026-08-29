@@ -77,13 +77,18 @@ func main() {
 
 	log.Println("Routes registered successfully")
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + port,
 		Handler: r,
 	}
 
 	go func() {
-		log.Println("Starting server on :8080")
+		log.Printf("Starting server on port %s", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
