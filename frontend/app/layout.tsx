@@ -1,6 +1,6 @@
 /** @format */
 
-import type {Metadata} from "next"
+import type {Metadata, Viewport} from "next"
 import {
   Geist,
   Geist_Mono,
@@ -39,7 +39,21 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Job Dashboard",
-  description: "Track your job applications"
+  description: "Dein Job Dashboard",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Job Dashboard"
+  }
+}
+
+export const viewport: Viewport = {
+  themeColor: "#09090b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false
 }
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
