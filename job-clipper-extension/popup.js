@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // ⚙️ KONFIGURATION
   const GOOGLE_CLIENT_ID = "140044066141-o2i676ttmv05k425kc5uoanh6fjphigt.apps.googleusercontent.com";
-  const BACKEND_URL = "http://localhost"; // Passe die URL an dein Backend an (z. B. http://localhost/auth/login oder http://localhost:8080)
+  const BACKEND_URL = "https://job-dashboard-5pzp.onrender.com"; // Passe die URL an dein Backend an (z. B. http://localhost/auth/login oder http://localhost:8080)
 
   const loginView = document.getElementById("loginView");
   const clipperView = document.getElementById("clipperView");
