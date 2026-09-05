@@ -1,6 +1,9 @@
 package middleware
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 func CORS(next http.Handler) http.Handler {
 	// 1. Liste aller erlaubten Domains (inkl. https:// nicht vergessen!)
@@ -16,7 +19,7 @@ func CORS(next http.Handler) http.Handler {
 		origin := r.Header.Get("Origin")
 
 		// 3. Prüfen, ob der Origin in unserer Liste erlaubt ist
-		if allowedOrigins[origin] {
+		if allowedOrigins[origin] || strings.HasPrefix(origin, "chrome-extension://") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 
